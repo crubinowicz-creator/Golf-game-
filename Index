@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Golf Quota Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1a5c35;
+    --green-light: #2d8a52;
+    --cream: #f5f0e8;
+    --gold: #c9a84c;
+    --dark: #0f1f15;
+    --row-even: #eee8dc;
+    --row-odd: #f5f0e8;
+  }
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+background: var(–dark);
+min-height: 100vh;
+font-family: ‘DM Sans’, sans-serif;
+color: var(–cream);
+padding: 24px 16px 48px;
+}
+
+.bg-texture {
+position: fixed; inset: 0; z-index: 0;
+background-image: repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(255,255,255,0.015) 40px, rgba(255,255,255,0.015) 41px);
+pointer-events: none;
+}
+
+.container { position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; }
+
+header { text-align: center; margin-bottom: 32px; }
+.flag { font-size: 42px; display: block; margin-bottom: 4px; }
+h1 { font-family: ‘Bebas Neue’, sans-serif; font-size: clamp(48px, 10vw, 80px); letter-spacing: 4px; color: var(–gold); line-height: 1; }
+.subtitle { font-family: ‘DM Mono’, monospace; font-size: 12px; letter-spacing: 3px; color: rgba(245,240,232,0.5); margin-top: 6px; text-transform: uppercase; }
+
+.quota-legend {
+background: rgba(201,168,76,0.1);
+border: 1px solid rgba(201,168,76,0.3);
+border-radius: 8px;
+padding: 14px 20px;
+margin-bottom: 28px;
+display: flex;
+gap: 20px;
+flex-wrap: wrap;
+justify-content: center;
+}
+
+.legend-item { font-family: ‘DM Mono’, monospace; font-size: 12px; display: flex; align-items: center; gap: 8px; color: rgba(245,240,232,0.8); }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.dot-bogey { background: #888; }
+.dot-par { background: var(–cream); }
+.dot-birdie { background: var(–green-light); }
+.dot-eagle { background: var(–gold); }
+
+.card { background: var(–cream); border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+
+.card-header-top {
+background: var(–green);
+padding: 8px 16px 0;
+display: grid;
+grid-template-columns: 28px 160px 70px 70px 240px 80px 80px;
+gap: 6px;
+align-items: end;
+}
+
+.card-header-top span {
+font-family: ‘DM Mono’, monospace;
+font-size: 9px;
+letter-spacing: 2px;
+color: rgba(245,240,232,0.45);
+text-transform: uppercase;
+text-align: center;
+padding-bottom: 4px;
+}
+
+.score-section-label {
+text-align: center;
+border-bottom: 1px solid rgba(245,240,232,0.2);
+padding-bottom: 4px;
+}
+
+.card-header {
+background: var(–green);
+padding: 12px 16px;
+display: grid;
+grid-template-columns: 28px 160px 70px 70px 60px 60px 60px 60px 80px 80px;
+gap: 6px;
+align-items: center;
+}
+
+.card-header span {
+font-family: ‘DM Mono’, monospace;
+font-size: 10px;
+letter-spacing: 1.5px;
+text-transform: uppercase;
+color: rgba(245,240,232,0.7);
+text-align: center;
+}
+.card-header span:nth-child(2) { text-align: left; }
+
+.player-row {
+display: grid;
+grid-template-columns: 28px 160px 70px 70px 60px 60px 60px 60px 80px 80px;
+gap: 6px;
+align-items: center;
+padding: 8px 16px;
+border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+.player-row:nth-child(even) { background: var(–row-even); }
+.player-row:nth-child(odd) { background: var(–row-odd); }
+.player-row:last-child { border-bottom: none; }
+
+.player-num { font-family: ‘DM Mono’, monospace; font-size: 11px; color: rgba(15,31,21,0.35); text-align: center; }
+
+input[type=“text”], input[type=“number”] {
+border: none;
+background: rgba(0,0,0,0.06);
+border-radius: 5px;
+padding: 6px 8px;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 13px;
+color: var(–dark);
+width: 100%;
+outline: none;
+transition: background 0.15s, box-shadow 0.15s;
+-moz-appearance: textfield;
+}
+input[type=“number”]::-webkit-inner-spin-button,
+input[type=“number”]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+input:focus { background: rgba(26,92,53,0.1); box-shadow: 0 0 0 2px rgba(26,92,53,0.25); }
+
+.score-input { text-align: center; }
+.bogey-input:focus  { box-shadow: 0 0 0 2px rgba(136,136,136,0.4); }
+.par-input:focus    { box-shadow: 0 0 0 2px rgba(100,130,100,0.4); }
+.birdie-input:focus { box-shadow: 0 0 0 2px rgba(45,138,82,0.4); }
+.eagle-input:focus  { box-shadow: 0 0 0 2px rgba(201,168,76,0.5); }
+
+.quota-display, .points-display, .result-display {
+text-align: center;
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 24px;
+letter-spacing: 1px;
+color: var(–green);
+}
+
+.quota-display.empty, .points-display.empty, .result-display.empty {
+color: rgba(15,31,21,0.2);
+font-size: 14px;
+font-family: ‘DM Mono’, monospace;
+}
+
+.result-display.beat { color: #1a7a42; }
+.result-display.miss { color: #b03030; }
+.result-display.push { color: #888; }
+
+.actions { margin-top: 20px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+button {
+font-family: ‘DM Mono’, monospace;
+font-size: 12px;
+letter-spacing: 2px;
+text-transform: uppercase;
+border: none;
+border-radius: 6px;
+padding: 12px 24px;
+cursor: pointer;
+transition: all 0.2s;
+}
+
+.btn-primary { background: var(–gold); color: var(–dark); }
+.btn-primary:hover { background: #d4b05a; transform: translateY(-1px); }
+.btn-secondary { background: rgba(245,240,232,0.1); color: var(–cream); border: 1px solid rgba(245,240,232,0.2); }
+.btn-secondary:hover { background: rgba(245,240,232,0.15); }
+
+@media print {
+body { background: white; color: black; padding: 0; }
+.bg-texture, .actions { display: none; }
+h1 { color: #1a5c35; }
+.card { box-shadow: none; border: 1px solid #ccc; }
+.player-row:nth-child(even) { background: #f0f0f0; }
+.player-row:nth-child(odd) { background: white; }
+input { background: transparent; border-bottom: 1px solid #ccc; border-radius: 0; }
+}
+</style>
+
+</head>
+<body>
+<div class="bg-texture"></div>
+<div class="container">
+  <header>
+    <span class="flag">⛳</span>
+    <h1>QUOTA GAME</h1>
+    <div class="subtitle">Points Quota · 16 Players</div>
+  </header>
+
+  <div class="quota-legend">
+    <div class="legend-item"><div class="dot dot-bogey"></div> Bogey = 1 pt</div>
+    <div class="legend-item"><div class="dot dot-par"></div> Par = 2 pts</div>
+    <div class="legend-item"><div class="dot dot-birdie"></div> Birdie = 4 pts</div>
+    <div class="legend-item"><div class="dot dot-eagle"></div> Eagle = 8 pts</div>
+    <div class="legend-item" style="margin-left:8px;padding-left:12px;border-left:1px solid rgba(201,168,76,0.3);">Quota = 36 − Handicap</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header-top">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span class="score-section-label">Score Breakdown</span>
+      <span></span>
+      <span></span>
+    </div>
+    <div class="card-header">
+      <span>#</span>
+      <span>Player</span>
+      <span>HCP</span>
+      <span>Quota</span>
+      <span>🟤 Bogey</span>
+      <span>⚪ Par</span>
+      <span>🟢 Birdie</span>
+      <span>🟡 Eagle</span>
+      <span>Points</span>
+      <span>+/− Quota</span>
+    </div>
+    <div id="playerList"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn-primary" onclick="window.print()">🖨 Print Scorecard</button>
+    <button class="btn-secondary" onclick="clearAll()">Clear All</button>
+  </div>
+</div>
+
+<script>
+  const N = 16;
+  const list = document.getElementById('playerList');
+
+  for (let i = 1; i <= N; i++) {
+    const row = document.createElement('div');
+    row.className = 'player-row';
+    row.innerHTML = `
+      <div class="player-num">${i}</div>
+      <input type="text" placeholder="Player ${i}" />
+      <input class="score-input" type="number" min="0" max="54" placeholder="—" oninput="calc(${i})" id="hcp-${i}" />
+      <div class="quota-display empty" id="quota-${i}">—</div>
+      <input class="score-input bogey-input"  type="number" min="0" max="18" placeholder="0" oninput="calc(${i})" id="bog-${i}" />
+      <input class="score-input par-input"    type="number" min="0" max="18" placeholder="0" oninput="calc(${i})" id="par-${i}" />
+      <input class="score-input birdie-input" type="number" min="0" max="18" placeholder="0" oninput="calc(${i})" id="bir-${i}" />
+      <input class="score-input eagle-input"  type="number" min="0" max="18" placeholder="0" oninput="calc(${i})" id="eag-${i}" />
+      <div class="points-display empty" id="pts-${i}">—</div>
+      <div class="result-display empty" id="res-${i}">—</div>
+    `;
+    list.appendChild(row);
+  }
+
+  function val(id) {
+    const v = parseFloat(document.getElementById(id).value);
+    return isNaN(v) ? null : v;
+  }
+
+  function calc(i) {
+    const hcp = val(`hcp-${i}`);
+    const quotaEl = document.getElementById(`quota-${i}`);
+    const ptsEl   = document.getElementById(`pts-${i}`);
+    const resEl   = document.getElementById(`res-${i}`);
+
+    let quota = null;
+    if (hcp !== null) {
+      quota = 36 - hcp;
+      quotaEl.textContent = quota;
+      quotaEl.className = 'quota-display';
+    } else {
+      quotaEl.textContent = '—';
+      quotaEl.className = 'quota-display empty';
+    }
+
+    const bog = val(`bog-${i}`) ?? 0;
+    const par = val(`par-${i}`) ?? 0;
+    const bir = val(`bir-${i}`) ?? 0;
+    const eag = val(`eag-${i}`) ?? 0;
+
+    const hasScores = document.getElementById(`bog-${i}`).value !== '' ||
+                      document.getElementById(`par-${i}`).value !== '' ||
+                      document.getElementById(`bir-${i}`).value !== '' ||
+                      document.getElementById(`eag-${i}`).value !== '';
+
+    if (hasScores) {
+      const pts = (bog * 1) + (par * 2) + (bir * 4) + (eag * 8);
+      ptsEl.textContent = pts;
+      ptsEl.className = 'points-display';
+
+      if (quota !== null) {
+        const diff = pts - quota;
+        resEl.textContent = diff > 0 ? `+${diff}` : diff === 0 ? 'E' : `${diff}`;
+        resEl.className = 'result-display ' + (diff > 0 ? 'beat' : diff < 0 ? 'miss' : 'push');
+      } else {
+        resEl.textContent = '—';
+        resEl.className = 'result-display empty';
+      }
+    } else {
+      ptsEl.textContent = '—';
+      ptsEl.className = 'points-display empty';
+      resEl.textContent = '—';
+      resEl.className = 'result-display empty';
+    }
+  }
+
+  function clearAll() {
+    document.querySelectorAll('input').forEach(el => el.value = '');
+    for (let i = 1; i <= N; i++) {
+      document.getElementById(`quota-${i}`).textContent = '—';
+      document.getElementById(`quota-${i}`).className = 'quota-display empty';
+      document.getElementById(`pts-${i}`).textContent = '—';
+      document.getElementById(`pts-${i}`).className = 'points-display empty';
+      document.getElementById(`res-${i}`).textContent = '—';
+      document.getElementById(`res-${i}`).className = 'result-display empty';
+    }
+  }
+</script>
+
+</body>
+</html>
